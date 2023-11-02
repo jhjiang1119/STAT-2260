@@ -1,0 +1,132 @@
+---
+title: "STAT 2260 Homework 2"
+author: "Jihang Jiang"
+date: "2023-09-11"
+output:
+  word_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1. Favorite Movie
+
+-   **Infernal Affairs**
+-   The Godfather
+-   Star Wars
+-   Batman
+-   Harry Potter 
+
+## 2.Image
+
+![Bivariate normal distribution](C:/Users/jhjia/Desktop/STAT2260/test/rou0.1.png)
+
+## 3.Table
+
+| Name  | Age |   Salary |
+|-------|----:|---------:|
+| Sam   |  22 | \$55,000 |
+| Tom   |  25 | \$60,000 |
+| Susan |  30 | \$80,000 |
+
+## 4.Exercises from Appendix D of the textbook MDSR (2nd Edition)
+
+#### 1) Problem 3
+
+Consider an R Markdown file that includes the following code chunks. What will be output when this file is rendered?
+
+```{r}
+x <- 1:5 # x = 1 2 3 4 5 
+```
+
+```{r}
+x <- x + 1 #all elements in x plus 1. x = 2 3 4 5 6
+```
+
+```{r}
+x
+```
+
+#### 2) Problem 4
+
+Consider an R Markdown file that includes the following code chunks. What will be output when the file is rendered?
+
+```{r echo = FALSE}
+x <- 1:5 #x = 1 2 3 4 5
+```
+
+echo = FALSE means the contents of the code chunks are not shown in the output document, only the results of the calculation. When generate an HTML output document that contains only the results of the calculation and not the contents of the code chunks.
+
+```{r echo = FALSE}
+x <- x + 1 # x = 2 3 4 5 6
+```
+
+```{r include = FALSE}
+x
+```
+include = FALSE means this code chunk  will not be shown in the final output document.
+
+
+#### 3) Problem 5
+Consider an R Markdown file that includes the following code chunks. What will be output when this file is rendered?
+```{r echo = FALSE}
+x <- 1:5 # x = 1 2 3 4 5
+```
+
+```{r echo = FALSE}
+x <- x + 1 # x = 2 3 4 5 6
+```
+
+```{r echo = FALSE}
+x # x = 2 3 4 5 6
+```
+
+
+#### 4) Problem 6
+Consider an R Markdown file that includes the following code chunks. What will be output when the file is rendered?
+```{r echo = FALSE}
+x <- 1:5 #x = 1 2 3 4 5
+```
+
+```{r echo = FALSE, eval = FALSE}
+x <- x + 1 # x = 2 3 4 5 6
+```
+eval = FALSE means this code chunk will not be run. The variable x will not be created.
+```{r echo = FALSE}
+x
+```
+#### 5) Problem 9
+Describe the implications of changing warning=TRUE to warning=FALSE in the following code chunk.
+
+```{r}
+sqrt(-1)
+```
+Because sqrt() means $$\sqrt()$$ . Everything in the square root must be non-negative.
+
+#### 6) Problem 12
+Explain what the following code chunks will display and why this might be useful for technical reports from a data science project.
+```{r chunk1, eval = TRUE, include = FALSE}
+x <- 15
+cat("assigning value to x.\n")
+```
+Code chunk1 will output "assigning value to x." in console, but because include = FALSE this chunk will not shown in final HTML document.
+```{r chunk2, eval = TRUE, include = FALSE}
+x <- x + 3
+cat("updating value of x.\n")
+```
+Code chunk2 will output "updating value of x." in console,  this chunk will also not be shown in final document because of include = FALSE.
+```{r chunk3, eval = FALSE, include = TRUE}
+cat("x =", x, "\n")
+```
+
+```{r chunk1, eval = FALSE, include = TRUE}
+```
+
+```{r chunk2, eval = FALSE, include = TRUE}
+```
+
+This method allows us to present code and output in reports while controlling how blocks of code are run and displayed. You can choose to hide unnecessary code execution steps to make the report clearer and easier to read. 

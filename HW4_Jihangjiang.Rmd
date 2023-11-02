@@ -1,0 +1,158 @@
+---
+title: "STAT 2260 Homework 4"
+author: "Jihang Jiang"
+date: "2023-10-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(Hmisc)
+library(mdsr)
+library(dplyr)
+library(babynames)
+
+```
+
+```{r}
+BabynamesDist <- make_babynames_dist()
+head(BabynamesDist)
+```
+
+ 
+
+```{r}
+anna_data <- BabynamesDist %>%
+  filter(name=="Anna") 
+summary(anna_data);anna_data
+```
+## Q1
+
+#### Estimate the values of the three summary statistics (Q1, Median, Q3) for Anna in the data graphic.
+
+#### Answer: Estimated Q1: 14, estimated median: 32, estimated Q3:61 
+
+
+## Q2
+
+#### Which name(s) has(have) the smallest inter-quartile range for age?
+
+#### Answer: Jessica, Lisa
+
+
+
+## Q3
+
+#### According to what summary statistic are the names ordered in the figure?
+
+
+#### Answer: Names in the figure is ordered by median_age.
+
+## Q4
+
+#### List four visual cues that were used in this visualization.
+
+#### Answer: geom_linerange, geom_point, geom_text, ggtitle
+
+## Q5
+
+#### Create a new variable with value \|0.5−boys/total\|, using mutate(). List the top 10 years in which the name "Taylor" was given to M and F babies most equally.
+
+```{r}
+babynames %>%
+  filter(name=="Taylor") %>%
+  group_by(year) %>%
+  summarise(
+    N= n(),
+    total = sum(n),
+    boys = sum(ifelse(sex=="M",n,0))
+  ) %>%
+  mutate(new_variable = abs(0.5-boys/total)) %>%
+  arrange(new_variable) %>%
+  head(10)
+```
+
+## Q6
+
+#### Re-create the data graphic, "Youngest Male Names" (again, your result will be different from the chart below).
+
+```{r}
+young_data <- BabynamesDist %>%
+  filter(sex =="M", est_alive_today>0) %>%
+  group_by(name) %>%
+  summarise(
+    est_num_alive = sum(est_alive_today),
+    q1_age = wtd.quantile(age_today, est_alive_today, 0.25),
+    median = wtd.quantile(age_today, est_alive_today, 0.5),
+    q3_age = wtd.quantile(age_today, est_alive_today, 0.75)
+  )%>%
+  filter(est_num_alive>100000)%>%
+  arrange(median)%>%
+  head(25)
+young_data
+```
+
+
+```{r}
+m_plot <- ggplot(
+  data = young_data, 
+  aes(x = reorder(name, -median),  y = median)) + 
+  xlab(NULL) + 
+  ylab("Age (in years)")
+m_plot<- m_plot+
+  geom_linerange(
+    aes(ymin=q1_age,ymax=q3_age),
+    color="#87cefa",
+    linewidth=4,
+    alpha=0.8
+  )+
+  geom_point(fill = "#ed3324", colour = "white", size = 3, shape = 21) +
+  geom_point(aes(y=25,x=23.5),fill = "#ed3324", colour = "white", size = 3, shape = 21) +
+  geom_text(aes(y=27,x=23.5),label="median",cex=3.8)+
+  geom_text(aes(y=9.5,x=11),label="25th",cex=3.8)+
+  geom_text(aes(y=16.5,x=11),label="75th percentile",cex=3.8)+
+  geom_point(aes(y=8.5,x=11),shape=17)+
+  geom_point(aes(y=18.5,x=11),shape=17)+
+  labs(title ="Youngest Male Names" , subtitle = "By estimated median age for Americans alive as of Jan.1,2014")+
+  coord_flip()
+m_plot
+```
+
+### Use babynames data set to answer the following questions. Think carefully about what data transformations are needed to answer each question.
+
+## Q7
+
+#### Which year had the highest number of births?
+
+#### 1957 had the hightest number of births
+
+```{r}
+babynames %>%
+  group_by(year)%>%
+  summarise(
+    N=n(),
+    birth_num = sum(n)
+  ) %>%
+  arrange(desc(birth_num))
+```
+
+## Q8
+
+#### Find the most popular girl name between 1990 and 2000 (including 1990 and 2000).
+
+#### Answer: the most popular girl name between 1990 and 2000 is "Ashley"
+
+```{r}
+babynames %>%
+  group_by(name) %>%
+  filter(year>=1990 , year<=2000 , sex=="F")%>%
+  summarise(
+    N=n(),
+    name_sum = sum(n)
+  )%>%
+  arrange(desc(name_sum))
+```

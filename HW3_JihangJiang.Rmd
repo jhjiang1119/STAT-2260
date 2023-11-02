@@ -1,0 +1,186 @@
+---
+title: "STAT 2260 Homework 3"
+author: "Jihang Jiang"
+date: "2023-09-18"
+output:
+  html_document: default
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## STAT 2260 Homework 3
+
+```{r}
+library(tidyverse)
+library(mdsr)
+library(babynames)
+library(MASS)
+library(Hmisc)
+```
+
+```{r}
+BabynamesDist <- make_babynames_dist()
+head(BabynamesDist, 2)
+```
+
+## Questions 1 (10 points): Exercise 4 (Lab 3):
+
+#### Recreate figure "Age Distribution of American Boys Named Joseph" by collecting all the related code in Lab 3. Show both your code and the plot.
+
+```{r}
+joseph <- BabynamesDist %>% 
+  filter(name == "Joseph", sex == "M")
+```
+
+```{r}
+median_yob <-
+  with(joseph, wtd.quantile(year, est_alive_today, probs = 0.5))
+median_yob
+```
+
+```{r}
+name_plot <- ggplot(data = joseph, aes(x = year))
+name_plot <- name_plot +
+  geom_bar(aes(y = count_thousands * alive_prob),
+           stat = "identity", 
+           fill = "#b2d7e9", colour = "white") + 
+  geom_line(aes(y = count_thousands), linewidth = 2) +
+  ylab("Number of People (thousands)") + xlab(NULL) +
+  geom_bar(stat = "identity", colour = "white", fill = "#008fd5",
+           aes(y = ifelse(year == median_yob, est_alive_today / 1000, 0))) +
+  ggtitle("Age Distribution of American Boys Named Joseph") +
+  geom_text(x = 1935, y = 40, label = "Number of Josephs \n born each year") +
+  geom_text(x = 1915, y = 13, label =
+    "Number of Josephs \n born each year \n estimated to be alive \n on 1/1/2014",
+    colour = "#b2d7e9") +
+  geom_text(x = 2003, y = 40,
+    label = "The median \n living Joseph \n is 37 years old",
+            colour = "darkgray") +
+  geom_curve(x = 1995, xend = 1974, y = 40, yend = 24,
+    arrow = arrow(length = unit(0.3,"cm")), curvature = 0.5) + ylim(0, 42)
+name_plot
+```
+
+## Question 2 (10 points): Exercise 5 (Lab 3)
+
+#### Recreate the name plot for Lillian (girl) and add necessary context just as the one for Joseph. Modify the code chunk about adding context in the lab instruction according to the info about Lillian. Make sure you adjust the positions of the text labels so that they are in the appropriate places in the plot.
+
+```{r}
+lillian <- BabynamesDist %>% filter(name=="Lillian", sex=="F")
+median_li <- with(lillian, wtd.quantile(year,est_alive_today,probs = 0.5))
+median_li
+```
+
+```{r}
+lil_plot = ggplot(data = lillian,aes(x=year))
+lil_plot <- lil_plot + 
+  geom_bar(aes(y = count_thousands * alive_prob), stat = "identity", fill="#FFA500", colour="gray") +
+  geom_line(aes(y=count_thousands),linewidth= 1.5,colour="black") +
+  ylab("Number of People (thousands)") + xlab(NULL) +
+  geom_bar( stat = "identity", aes(y=ifelse(year==median_li, est_alive_today/1000, 0))) + 
+  ggtitle("Age Distribution of American Girls Named Lillian") +
+  geom_text(x = 1935, y = 10, label = "Number of Lillians \n born each year", colour="black") +
+  geom_text(x = 1907, y = 1.5, label =
+    "Number of Lillians \n born each year \n estimated to be alive \n on 1/1/2014",
+    colour = "#FFA500") +
+  geom_text(x = 1990, y = 4,
+    label = "The median \n living Lillian \n borned in 1966",
+            colour = "darkgray") +
+  geom_curve(x=1983, xend=1966, y=4, yend=0.9, arrow = arrow(length = unit(0.3,"cm")) , curvature = 0.5) 
+lil_plot
+```
+
+## Questions 3 (3 points)
+
+#### Use head(), dim(), and names() to know the structure of Boston Housing Data.
+
+```{r}
+library(MASS)
+head(Boston)
+```
+
+```{r}
+dim(Boston)
+```
+
+```{r}
+names(Boston)
+```
+
+## Questions 4 (12 points)
+
+#### In the Boston dataset, each row is corresponding to a town. medv is the median value (in \$1000) of owner-occupied homes in each town. Create a histogram for medv and overlay it with a density curve.
+
+Requirements:
+
+The density curve and the histogram bars should have different colors. Add a title to your figure. For example, "Histogram of Median House Values" Change the label of the x-axis to "Median House Value (in \$1000)".
+
+Hints: Note that the histogram by default will based on frequency. You need to specify y=..density.. in the aes argument of ggplot to make the histogram and the density plot be on the same scale. Otherwise, the density seems "invisible"!
+
+```{r}
+data_boston <- Boston
+boston_plot <- ggplot(data= data_boston, aes(x=medv, y=after_stat(density))) +
+  geom_histogram(bins = 30, colour="#ffda89", fill="#f4a460")+
+  geom_density(colour= "#ff0000", linewidth= 1.5)+
+  ggtitle("Histogram of Median House Values") +
+  xlab("Median House Value (in $1000)")
+
+boston_plot
+
+```
+
+## Questions 5 (5 points)
+
+#### Now focus on the rm variable, which is the average number of rooms per dwelling. Create a histogram for rm with the same requirements in Question 4. Make sure to use appropriate title and x-axis label.
+
+```{r}
+rm_plot <- ggplot(data= data_boston, aes(x=rm,y=after_stat(density)))+
+  xlab("Average Number of Rooms Per Welling")+
+  ggtitle("Histogram of Average Number of Rooms Per Welling")+
+  geom_histogram(bins = 30, colour="#ffc0cb", fill="#ffb6c1")+
+  geom_density(col="#800080", linewidth= 1.5)
+rm_plot
+```
+
+## Questions 6 (5 points)
+
+#### Create a scatterplot for medv and rm. Overlay a smooth curve on the scatterplot.
+
+```{r}
+scatt_plot <- ggplot(data= data_boston, aes(rm,medv)) + 
+  geom_point() +
+  geom_smooth()
+scatt_plot
+```
+
+## Questions 7 (5 points)
+
+Notice that rm is a numeric variable. Let us round it and convert it to a factor variable:
+
+```{r}
+rm_cat = as.factor(round(Boston$rm))
+Boston2 <- data.frame(Boston$medv, rm_cat)
+head(Boston2)
+```
+
+#### Create a side-by-side boxplot for medv. The grouping variable should be rm_cat. Make sure that you use Boston2 instead of the original data set Boston.
+
+```{r}
+bo_plot <- ggplot(data=Boston2, aes(x=rm_cat,y=Boston.medv)) +
+  geom_boxplot() 
+bo_plot
+```
+
+Do you know why we must do the conversion? Try to skip the transformation step and run your code for graphing. What's wrong?
+
+```{r}
+wrong_plot <- ggplot(data = data_boston, aes(x=rm, y= medv))+
+  geom_boxplot()
+wrong_plot
+```
+
+In box plot, the group variable should be a discrete variable, so that we can generate box plots for each groups. The purpose of a box plot is to compare the distribution of values between different groups. But numeric variable is a continuous variable, so we can see there is only one group in the upper wrong plot.

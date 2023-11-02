@@ -1,0 +1,275 @@
+---
+title: "STAT 2260 Homework 1"
+author: "Jihang Jiang"
+date: "2023-09-11"
+output:
+  word_document: default
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### 1. Objects (13 points)
+
+A user has typed the following commands into the console.
+
+#### 1) Show the value of each object and use R command to measure the length of them. (4 points)
+
+```{r}
+obj1 <- seq(-3,21,3)
+obj2 <- c(1,3,5)
+obj3 <- obj2>2.5
+obj4 <- "I love pizza."
+```
+
+```{r}
+obj1
+```
+
+```{r}
+length(obj1)
+```
+
+```{r}
+obj2
+```
+
+```{r}
+length(obj2)
+```
+
+```{r}
+obj3
+```
+
+```{r}
+length(obj3)
+```
+
+```{r}
+obj4
+```
+
+```{r}
+length(obj4)
+```
+
+#### 2) What values are returned by the following commands? (9 points)
+
+```{r}
+obj1*(-1)
+```
+
+```{r}
+obj1[2:6]
+```
+
+```{r}
+obj1[-2]
+```
+
+```{r}
+obj1 + obj2
+```
+
+```{r}
+obj1 * obj3
+```
+
+```{r}
+obj2 + obj3
+```
+
+```{r}
+#obj1+obj4 #obj4 is a character type, obj1 is numeric type.
+```
+
+```{r}
+sum(obj2)
+```
+
+```{r}
+sum(obj3)
+```
+
+### 2. Vectors (5 points)
+
+A user has typed the following commands into the console.
+
+```{r}
+a <- c(0, 1)
+b <- c(TRUE, FALSE)
+c <- c("happy", "sad")
+```
+
+What do each of the following commands return? Pay attention to the type of the vector after concatenating two or more vectors.
+
+```{r}
+a+b
+```
+
+```{r}
+a*b
+```
+
+```{r}
+d <- c(a,b);d
+```
+
+```{r}
+e <- c(a,c);e
+```
+
+```{r}
+g <- c(b,c);g
+```
+
+```{r}
+w <- c(a,b,c);w
+```
+
+### 3. Errors (5 points)
+
+For each of the following assignment statements, describe the error (or note why it does not generate an error).
+
+1.The function should be floor(), we should put 10.3 into parentheses.
+
+```{r}
+#result1 <- floor 10.3 
+```
+
+2.It should be \<- not \<--
+
+```{r}
+#result2 <-- "Hello to you!"
+```
+
+3.Variable names should not start with a number.
+
+```{r}
+#3result <- "Hello to you"
+```
+
+4.Missing a " on right side.
+
+```{r}
+#result4 <- "Hello to you
+```
+
+5.Correct! The date() function is used to get the current system date and time. This function doesn't take any parameters.
+
+```{r}
+#result5 <- date()
+```
+
+### 4. Matrices (7 points)
+
+##### 1) (4 points) Create two matrices as follows by writing code. Call them `M1` and `M2`, respectively.
+
+```{r}
+m1 <- c(24, 22, 20, 18, 16, 14, 12, 10, 8, 6, 4, 2)
+M1 <- matrix(m1,3,4)
+M2 <- matrix(m1,3,4,byrow = TRUE)
+
+```
+
+```{r}
+M1
+```
+
+```{r}
+M2
+```
+
+2)  Extract the value at the 3nd row and 1st column of M1 using R (1 points)
+
+```{r}
+M1[3,1]
+```
+
+3)  Extract the values in the 2nd row in M1 using R (1 points)
+
+```{r}
+M1[2,]
+```
+
+4)  Extract the values in the 3nd column in M2 using R (1 points)
+
+```{r}
+M2[,3]
+```
+
+### 5.Calculate the following using R (5 points)
+
+##### 1) $log_{10}(1)-ln(1)$
+
+```{r}
+log10(1)-log(1)
+```
+
+##### 2) $sin(\pi/3)$+cos$(\pi/3)$
+
+```{r}
+sin(pi/3)+cos(pi/3)
+```
+
+##### 3) Round up the result of 2) to the nearest integer
+
+```{r}
+floor(sin(pi/3)+cos(pi/3))
+```
+
+##### 4) Round the result of 2) to two decimal places
+
+```{r}
+round(sin(pi/3)+cos(pi/3),2)
+```
+
+##### 5) Calculate the remainder of $2022/9$ using R
+
+```{r}
+2022 %% 9
+```
+
+### 6. Data Frames (15 points)
+
+##### 1) Create a data frame as follows (4 points):
+
+```{r}
+name <- c("Jacob","James","Jeremy","Jimmy","John")
+year <- c(1,2,3,4,3)
+gpa <- c(3.41, 3.53, 3.32, 3.67, 4.00)
+height <- c(1.78, 1.85, 1.72, 1.82, 1.68)
+df <- data.frame("Name"=name,"Year"=year,"GPA"=gpa,"Height"=height);df
+```
+
+##### 2) Use the column name to extract the GPA of all students. (2 points)
+
+```{r}
+df$GPA
+```
+
+##### 3) Select the information about Jeremy (2 points).
+
+```{r}
+df[3,]
+```
+
+##### 4) List name(s) of students whose GPA is lower than 3.6 (3 points).
+
+```{r}
+df[df$GPA<3.6,1]
+```
+
+##### 5) List the GPA of all 3rd-year students and calculate the mean GPA. (4 points)
+
+```{r}
+gpa_3rd <- df[df$Year==3,3];gpa_3rd
+```
+
+```{r}
+mean(gpa_3rd)
+```
