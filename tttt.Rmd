@@ -1,0 +1,143 @@
+---
+title: "HW5_STAT2260"
+author: "Jihang Jiang"
+date: "2023-10-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(kableExtra)
+library(tidyverse)
+
+ebsurvey <- read_csv('science-faith-attitude.csv')
+head(ebsurvey)
+```
+```{r}
+ebsurvey0 <- ebsurvey %>% 
+  select(kstot, age, toomuchscience)
+```
+
+```{r}
+ebsurvey0 <- ebsurvey0 %>% 
+  rename(science_score = kstot,
+         attitude = toomuchscience)
+head(ebsurvey0,3)
+```
+```{r}
+ebsurvey1 <- na.omit(ebsurvey0)
+dim(ebsurvey1)
+```
+## Exercise 1. (15 points) Explore the distribution of science knowledge quiz scores
+(5 points) Create a histogram for science_socre. Overlay the histogram with a density curve.
+
+(10 points) Create a summary statistics table for science_score. Note that you need to calculate the mean, standard deviation, median, Q1, Q3, and the range of it.
+
+```{r}
+ggplot(ebsurvey1, aes(x = science_score,y=after_stat(density))) +
+    geom_histogram(color = 'white', fill='steelblue',binwidth = 1) +
+    labs(x = 'science_socre', 
+         y = 'Frequency') +
+    geom_density(size=1.5)
+```
+
+```{r}
+ebsurvey1 %>%
+    summarise(Mean = mean(science_score),
+              SD = sd(science_score),
+              Median = quantile(science_score, 0.5),
+              Q1 = quantile(science_score, 0.25),
+              Q3 = quantile(science_score, 0.75),
+              Range = max(science_score)-min(science_score)) %>%
+    kable(digits = 2, 
+          caption = 'Descriptive Statistics of Science_score') %>%
+    kable_styling(full_width = FALSE)
+```
+
+## Exercise 2. Use the functions in Lecture 14 to do bootstrap for regression for this problem. Use 100 bootstrap samples.
+
+Requirement: Calculate a 99% confidence interval for each term.
+
+
+```{r}
+library(broom)
+library(modelr)
+library(purrr)
+```
+
+
+
+```{r}
+boot <- modelr::bootstrap(ebsurvey1,100)
+models <- map(boot$strap,~lm(attitude ~ science_score + age, data=.))
+models.tb <- map_df(models,broom::tidy,.id="id")
+```
+
+```{r}
+head(models.tb)
+```
+
+```{r}
+models.tb %>% 
+  filter(term=="(Intercept)") %>% 
+  summarize(LowerBound_Intercept=quantile(estimate,0.005),UpperBound_Intercept=quantile(estimate,0.995))
+```
+
+
+```{r}
+models.tb %>% 
+  filter(term=="science_score") %>% 
+  summarize(LowerBound_science_score=quantile(estimate,0.005),UpperBound_science_score=quantile(estimate,0.995))
+```
+
+```{r}
+models.tb %>% 
+  filter(term=="age") %>% 
+  summarize(LowerBound_age=quantile(estimate,0.005),UpperBound_age=quantile(estimate,0.995))
+```
+## Exercise 3. (15 points) Create a visualization for the bootstrap sample you got in Exercise 2.
+
+Requirements:
+
+Create a histogram for each coefficient.
+
+Overlay (kernel) density curves on the histograms. (Hint: Use geom_density)
+
+Display all three histograms in one plot. (Hint: Use facet_wrap)
+
+
+```{r}
+coe_plot <- ggplot(models.tb,aes(x=estimate,y=after_stat(density)))+
+  geom_histogram(fill="steelblue",bins = 15)+
+  geom_density(size=1)+
+  facet_wrap(~ term,scales = "free")
+coe_plot
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
