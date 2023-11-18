@@ -1,0 +1,143 @@
+---
+title: "HW62260"
+author: "jihang jiang"
+date: "2023-11-10"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+library(tidyverse)
+library(NHANES)
+```
+
+```{r}
+data1<- NHANES %>%
+  select(HardDrugs,Gender,HealthGen,Depressed,SleepHrsNight,AlcoholDay,SmokeNow,Marijuana) %>% na.omit()
+head(data1)
+```
+## Exercise1
+
+1. Create a contingency table for Marijuana and HardDrugs. Show proportion of each category.
+
+```{r}
+contingency_table <- table(data1$Marijuana,data1$HardDrugs)
+prop.table(contingency_table)
+```
+## Exercise2-4
+```{r}
+set.seed(99)
+train1 <- data1 %>% sample_frac(size = 0.8)
+test1 <- data1 %>% setdiff(train1)
+library(glmnet)
+form<- as.formula(
+  "HardDrugs ~Gender+HealthGen+Depressed+SleepHrsNight+AlcoholDay+SmokeNow+Marijuana")
+predictors <- model.matrix(form, data = train1) 
+cv.fit <- cv.glmnet(predictors, train1$HardDrugs, family = "binomial", type = "class")
+lambda_opt=cv.fit$lambda.1se
+mod_lr <- glmnet(predictors, train1$HardDrugs, family = "binomial", lambda = lambda_opt)
+form2 <- as.formula(HardDrugs~Gender+Depressed+AlcoholDay+Marijuana)
+mod_lr2 <- glm(form2, data=train1,family=binomial)
+summary(mod_lr2)
+```
+
+2. Answer: "MarijuanaYes" is the most significant variable which has the smallest p-value of <2e-16.
+
+3. Answer: Estimate of Marijuana is 3.11054, shows that Marijuana and HardDrugs have a positive relationship. And we also can find out that compaired with any other variables, the slope is much greater than others which means changes in MarijunanaYes will influence more on HardDrugs.  
+
+4. Answer: In this model we can find out that Gendermale is statistically significant with p-value of 6.45e-05 and Genderfemale is not even statistically significant. So in this case Males are more likely to use hard drugs.
+
+## Exercise5-6
+
+```{r}
+library(rpart)
+library(rpart.plot)
+
+mod_tree <- rpart(form2,data=train1)
+rpart.plot(mod_tree)
+```
+
+5. Answer: The most important factor to predict HardDrugs is Marijuana.
+
+6. Answer: People who uses Marijuana and depressed is more likely to use hard drugs. 
+
+We can see from the decision tree, we have probability of 0.04 for those who does not use Marijuana but uses hard drugs; and probability of 0.46 for those who uses Marijuana and uses hard drugs; and probability of 0.41 for those who uses Marijuana but does not depressed and uses hard drugs; the probability of 0.58 for who uses hard drugs also uses Marijuana and depressed.
+
+
+```{r}
+data2<- NHANES %>%
+  select(Gender,Age,Race1,Education,MaritalStatus,HHIncomeMid,Poverty,HomeOwn,Weight,Height,
+         BMI,Pulse,BPSysAve,BPDiaAve,Diabetes,HealthGen,DaysPhysHlthBad,DaysMentHlthBad,
+         Depressed,SleepHrsNight,SleepTrouble,AlcoholDay,Smoke100,Marijuana,HardDrugs) %>% 
+  drop_na()
+```
+```{r}
+train2 <- data2 %>% sample_frac(size = 0.8, fac=HardDrugs)
+test2 <- data2 %>% setdiff(train2)
+```
+
+```{r}
+form_full<- as.formula(HardDrugs~Gender+Age+Race1+Education+MaritalStatus+HHIncomeMid+Poverty+HomeOwn+Weight+Height+BMI+Pulse+BPSysAve+BPDiaAve+Diabetes+HealthGen+DaysPhysHlthBad+DaysMentHlthBad+Depressed+SleepHrsNight+SleepTrouble+AlcoholDay+Smoke100+Marijuana)
+```
+
+```{r}
+form_full_7variables <- as.formula(HardDrugs~Gender+Gender+HealthGen+Depressed+SleepHrsNight+AlcoholDay+SmokeNow+Marijuana)
+```
+
+
+## Exercise7:
+
+```{r}
+mod_tree2 <- rpart(form_full_7variables, data=train1)
+rpart.plot(mod_tree2)
+```
+```{r}
+confusion_matrix <- function(data,y,mod){
+  confusion_matrix <- data %>% 
+  mutate(pred = predict(mod, newdata = data, type = "class"),
+         y=y) %>%
+  select(y,pred) %>% table()
+}
+misclass <- function(confusion){
+  misclass <- 1- sum(diag(confusion))/sum(confusion)
+  return(misclass)
+}
+```
+
+## Exercise8:
+
+```{r}
+confusion_matrix_tree <- confusion_matrix(test1, test1$HardDrugs, mod_tree2)
+print(confusion_matrix_tree)
+```
+
+
+```{r}
+misclass(confusion_matrix_tree)
+```
+
+## Extension: Exercise 7&8: 
+
+Sorry for extra works, about the understanding of HW, if we treat form_full as more variables like what we did in lab6, the results are as follows.
+
+```{r}
+mod_tree2_new <- rpart(form_full, data=train2)
+rpart.plot(mod_tree2_new)
+```
+
+```{r}
+confusion_matrix_tree_new <- confusion_matrix(test2, test2$HardDrugs, mod_tree2_new)
+misclass(confusion_matrix_tree_new)
+```
+
+
+
+
+
+
+
+
+
+
