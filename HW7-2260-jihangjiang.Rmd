@@ -1,0 +1,212 @@
+---
+title: "HW7-2260-jihangjiang"
+author: "jihang jiang"
+date: "2023-11-16"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(NHANES)
+library(tidyverse)
+```
+
+```{r}
+confusion_matrix <- function(data,y,mod){
+  confusion_matrix <- data %>% 
+  mutate(pred = predict(mod, newdata = data, type = "class"),
+         y=y) %>%
+  select(y,pred) %>% table()
+}
+misclass <- function(confusion){
+  misclass <- 1- sum(diag(confusion))/sum(confusion)
+  return(misclass)
+}
+```
+
+
+```{r}
+data2<- NHANES %>%
+  select(Gender,Age,Race1,Education,MaritalStatus,HHIncomeMid,Poverty,HomeOwn,Weight,Height,
+         BMI,Pulse,BPSysAve,BPDiaAve,Diabetes,HealthGen,DaysPhysHlthBad,DaysMentHlthBad,
+         Depressed,SleepHrsNight,SleepTrouble,AlcoholDay,Smoke100,Marijuana,HardDrugs) %>% 
+  drop_na()
+
+set.seed(100)
+train2 <- data2 %>% sample_frac(size = 0.8, fac=HardDrugs)
+test2 <- data2 %>% setdiff(train2)
+```
+
+```{r}
+library(rpart)
+library(rpart.plot)
+form_full<- as.formula(HardDrugs~Gender+Age+Race1+Education+MaritalStatus+HHIncomeMid+Poverty+HomeOwn+Weight+Height+BMI+Pulse+BPSysAve+BPDiaAve+Diabetes+HealthGen+DaysPhysHlthBad+DaysMentHlthBad+Depressed+SleepHrsNight+SleepTrouble+AlcoholDay+Smoke100+Marijuana)
+
+mod_tree <- rpart(form_full,data=train2)
+```
+
+
+```{r}
+library(randomForest)
+
+mod_rf<- randomForest(form_full,train2,ntree=1000)
+mod_rf
+```
+## Exercise1:
+
+```{r}
+
+confusion_test_rf <- confusion_matrix(test2, test2$HardDrugs, mod_rf)
+misclass(confusion_test_rf)
+```
+
+## Exercise2:
+
+```{r}
+library(e1071)
+mod_nb <- naiveBayes(form_full, data=train2)
+confusion_test_nb <- confusion_matrix(test2,test2$HardDrugs,mod_nb)
+misclass(confusion_test_nb)
+```
+
+## Exercise3:
+
+Sensitivity(true positive rate) and Specificity(true negative rate):
+
+#### For RandomForset:
+
+```{r}
+confusion_test_rf
+```
+```{r}
+tpr_rf <- confusion_test_rf[2,2]/sum(confusion_test_rf[2, ]);tpr_rf
+```
+
+```{r}
+tnr_rf <- confusion_test_rf[1,1]/sum(confusion_test_rf[1, ]);tnr_rf
+```
+
+#### For Naive Bayes:
+
+```{r}
+confusion_test_nb
+```
+```{r}
+tpr_nb <- confusion_test_nb[2,2]/sum(confusion_test_nb[2,]);tpr_nb
+```
+```{r}
+tnr_nb <- confusion_test_nb[1,1]/sum(confusion_test_nb[1,]);tnr_nb
+```
+
+## Exercise4:
+
+```{r}
+library(rpart)
+library(rpart.plot)
+set.seed(100)
+mod_tree <- rpart(form_full,data=train2)
+```
+
+
+```{r}
+library(ROCR)
+
+roc_data <- function(test,y_test,model,type){
+  prob = model %>% 
+    predict(newdata=test, type=type) %>% 
+    as.data.frame()
+  pred_prob = prediction(prob[,2], y_test)
+  perf = performance(pred_prob, 'tpr', 'fpr')
+  perf_df = data.frame(perf@x.values, perf@y.values)
+  names(perf_df)=c('fpr','tpr')
+  return(perf_df)
+}
+
+point_data <- function(test,y_test,model,type){
+  y_pred = predict(model, newdata=test,type=type)
+  confusion_matrix = table(y_test, y_pred)
+  tpr = confusion_matrix['Yes','Yes']/sum(confusion_matrix['Yes',])
+  fpr = confusion_matrix['No','Yes']/sum(confusion_matrix['No',])
+  return(c(fpr,tpr))
+}
+```
+
+```{r}
+perf_df_rf = roc_data(test2, test2$HardDrugs, mod_rf, "prob")
+point_rf = point_data(test2, test2$HardDrugs, mod_rf, "class")
+```
+
+```{r}
+perf_df_nb = roc_data(test2,test2$HardDrugs,mod_nb,"raw")
+point_nb = point_data(test2,test2$HardDrugs,mod_nb, "class")
+```
+
+```{r}
+perf_df_dt = roc_data(test2,test2$HardDrugs,mod_tree,"prob")
+point_dt = point_data(test2,test2$HardDrugs,mod_tree, "class")
+```
+
+
+```{r}
+ggplot()+
+  geom_line(data =perf_df_rf, aes(x=fpr, y=tpr), color="purple",lwd=1)+
+  geom_point(data =perf_df_rf, aes(x=fpr, y=tpr), x=point_rf[1],y=point_rf[2],size=3,col="red")+
+  geom_line(data =perf_df_nb, aes(x=fpr, y=tpr), color="steelblue",lwd=1)+
+  geom_point(data =perf_df_nb, aes(x=fpr, y=tpr), x=point_nb[1],y=point_nb[2],size=3,col="blue")+
+  geom_line(data =perf_df_dt, aes(x=fpr, y=tpr), color="orange",lwd=1)+
+  geom_point(data =perf_df_dt, aes(x=fpr, y=tpr), x=point_dt[1],y=point_dt[2],size=3,col="yellow")+
+  labs(x='False Positive Rate', y='True Positive Rate')
+```
+
+## Exercise5:
+
+```{r}
+
+library(caret)
+control <- trainControl(method="repeatedcv", number=5, 
+                        repeats=2, search="grid")
+set.seed(100)
+tunegrid <- expand.grid(.mtry=seq(2,20,2))
+rf_gridsearch <- train(form_full, data=train2, method="rf", 
+                       metric="Accuracy", tuneGrid=tunegrid, 
+                       trControl=control)
+print(rf_gridsearch)
+```
+```{r}
+plot(rf_gridsearch)
+```
+
+
+```{r}
+mod_rf2<- randomForest(form_full,train2,ntree=1000, mtry=8)
+mod_rf2
+```
+```{r}
+confusion_test_rf2 <- confusion_matrix(test2,test2$HardDrugs,mod_rf2)
+misclassrate_rf2<-misclass(confusion_test_rf2)
+misclassrate_rf2
+```
+
+## Exercise6:
+
+```{r}
+mod_rf3<- randomForest(form_full,train2,ntree=1000, mtry=6)
+mod_rf3
+```
+```{r}
+confusion_test_rf3 <- confusion_matrix(test2,test2$HardDrugs,mod_rf3)
+misclassrate_rf3<-misclass(confusion_test_rf3)
+misclassrate_rf3
+```
+
+Smaller mtry can make this model less complex and also may prevent the model to over-fitting. when we set mtry=8 for train data, compared with mtry=6, we achieve larger miss classification rate. Because the model might be overfitting on train data and does not perform well on test data. 
+
+
+
+
+
+
+
